@@ -128,7 +128,7 @@ def modularity_louvain_und_sign(W, gamma=1, qtype='sta', seed=None):
                 ma = m[u] - 1
                 dQ0 = ((knm0[u, :] + W0[u, u] - knm0[u, ma]) -
                        gamma * kn0[u] * (km0 + kn0[u] - km0[ma]) / s0)  # positive dQ
-                dQ1 = ((knm1[u, :] - knm1[u, ma]) -
+                dQ1 = ((kn1 - np.diag(W1) - knm1[u, :] - kn1[u] + knm1[u, ma]) -
                        gamma * kn1[u] * (-km1 - kn1[u] + km1[ma]) / s1)  # negative dQ
 
                 dQ = d0 * dQ0 - d1 * dQ1  # rescaled changes in modularity
