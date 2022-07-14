@@ -114,6 +114,10 @@ def modularity_louvain_und_sign(W, gamma=1, qtype='sta', seed=None):
         knm0 = W0.copy()  # positive node-to-module degree
         knm1 = W1.copy()  # negative node-to-module degree
 
+        W_no_self_loop = W1.copy()
+        np.fill_diagonal(W_no_self_loop, 0)
+        degree_no_self_loop = np.sum(W_no_self_loop, axis=0)
+
         m = np.arange(nh) + 1  # initial module assignments
         flag = True  # flag for within hierarchy search
         it = 0
@@ -128,13 +132,45 @@ def modularity_louvain_und_sign(W, gamma=1, qtype='sta', seed=None):
                 ma = m[u] - 1
                 dQ0 = ((knm0[u, :] + W0[u, u] - knm0[u, ma]) -
                        gamma * kn0[u] * (km0 + kn0[u] - km0[ma]) / s0)  # positive dQ
-                dQ1 = ((kn1 - np.diag(W1) - knm1[u, :] - kn1[u] + knm1[u, ma]) -
-                       gamma * kn1[u] * (-km1 - kn1[u] + km1[ma]) / s1)  # negative dQ
+                print(f'{(u, ma)}, {m}')
+                c_out = np.zeros(len(W1))
 
-                dQ = d0 * dQ0 - d1 * dQ1  # rescaled changes in modularity
+
+                for candid_idx in range(len(W1)):
+                    c_out[candid_idx] = degree_no_self_loop[u]
+                    if m[candid_idx] == m[u]: # u is in a module
+                        print('# 1')
+                        print(np.where(m == m[u])[0])
+                        for j in np.where(m == m[u])[0]:
+                            print(f'j: {j}, weight: -{W_no_self_loop[u, j]}')
+                            c_out[candid_idx] -= W_no_self_loop[u, j]
+                    else:
+                        print('# 2')
+                        print(np.where(m == m[candid_idx])[0])
+                        for j in np.where(m == m[candid_idx])[0]:
+                            print(f'j: {j}, weight: -{W_no_self_loop[u, j]}')
+                            c_out[candid_idx] -= W_no_self_loop[u, j]
+                print(f'c_out: {c_out}')
+
+                d_out = degree_no_self_loop[u]
+                if ma == m[u]:
+                    print('# 3')
+                    print(np.where(m == m[u])[0])
+                    for j in np.where(m == m[u])[0]:
+                        print(f'j: {j}, weight: {W_no_self_loop[u, j]}')
+                        d_out -= W_no_self_loop[u, j]
+                print(d_out)
+
+                dQ1 = ((c_out - d_out) -
+                       gamma * kn1[u] * (-km1 - kn1[u] + km1[ma]) / s1)  # negative dQ
+                print(dQ1)
+                print()
+
+                dQ = d0 * dQ0 + d1 * dQ1  # rescaled changes in modularity
                 dQ[ma] = 0  # no changes for same module
 
                 max_dQ = np.max(dQ)  # maximal increase in modularity
+                print(max_dQ)
                 if max_dQ > 1e-10:  # if maximal increase is positive
                     flag = True
                     mb = np.argmax(dQ)
@@ -184,3 +220,19 @@ def modularity_louvain_und_sign(W, gamma=1, qtype='sta', seed=None):
     ci_ret += 1
 
     return ci_ret, q[-1]
+
+
+def main():
+    am = -np.array([
+        [14, 4, 1, 1],
+        [4, 4, 0, 1],
+        [1, 0, 16, 3],
+        [1, 1, 3, 2]
+    ])
+    modularity_louvain_und_sign(am, qtype='neg', seed=1)
+
+
+
+if __name__ == "__main__":
+    main()
+
