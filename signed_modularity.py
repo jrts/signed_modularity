@@ -116,7 +116,7 @@ def modularity_louvain_und_sign(W, gamma=1, qtype='sta', seed=None):
 
         W_wo_self_loop = W1.copy()
         np.fill_diagonal(W_wo_self_loop, 0)
-        degree_no_self_loop = np.sum(W_wo_self_loop, axis=0)
+        degree_wo_self_loop = np.sum(W_wo_self_loop, axis=0)
 
         m = np.arange(nh) + 1  # initial module assignments
         flag = True  # flag for within hierarchy search
@@ -130,20 +130,20 @@ def modularity_louvain_und_sign(W, gamma=1, qtype='sta', seed=None):
             # loop over nodes in random order
             for u in rng.permutation(nh):
                 ma = m[u] - 1
-                print(f'{(u, ma)} {m}')
+                # print(f'{(u, ma)} {m}')
                 dQ0 = ((knm0[u, :] + W0[u, u] - knm0[u, ma]) -
                        gamma * kn0[u] * (km0 + kn0[u] - km0[ma]) / s0)  # positive dQ
 
                 c_out = np.zeros(len(W1))
                 for candid_idx in range(len(W1)):
-                    c_out[candid_idx] = degree_no_self_loop[u]
+                    c_out[candid_idx] = degree_wo_self_loop[u]
                     for j in np.where(m == m[candid_idx])[0]:
-                        c_out[candid_idx] -= W_no_self_loop[u, j]
+                        c_out[candid_idx] -= W_wo_self_loop[u, j]
 
-                d_out = degree_no_self_loop[u]
+                d_out = degree_wo_self_loop[u]
                 for j in np.where(m == m[u])[0]:
-                    d_out -= W_no_self_loop[u, j]
-                print(f'{(c_out, d_out)}\n')
+                    d_out -= W_wo_self_loop[u, j]
+                # print(f'{(c_out, d_out)}\n')
 
                 dQ1 = ((c_out - d_out) -
                        gamma * kn1[u] * (-km1 - kn1[u] + km1[ma]) / s1)  # negative dQ
